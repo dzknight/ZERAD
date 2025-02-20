@@ -1,0 +1,89 @@
+package member;
+
+import java.util.Scanner;
+
+public class MemberManager {
+	static Scanner in = new Scanner(System.in);
+	Member[] m = new Member[10];
+
+	MemberManager() {
+		while (true) {
+			System.out.println("번호를 선택해주세요.");
+			System.out.println("1.등록 2.전체보기 3.수정 4.삭제 ");
+			int k = in.nextInt();
+			if (k == 1) {
+				sign_Up();
+			} else if (k == 2) {
+				view();
+			} else if (k == 3) {
+				update();
+			} else if (k == 4) {
+				delete();
+			}
+		}
+	}
+
+	public void sign_Up() {
+		System.out.println("아이디를 입력하세요.");
+		String id = in.nextLine();
+		System.out.println("이름을 입력하세요.");
+		String name = in.nextLine();
+		System.out.println("주소를 입력하세요.");
+		String ad = in.nextLine();
+		Member M = new Member(id, name, ad);
+		for (int i = 0; i < m.length; i++) {
+			if (m[i] == null) {
+				m[i] = M;
+				break;
+			}
+
+		}
+
+	}
+
+	public void view() {
+		// 전체보기
+		for (int i = 0; i < m.length; i++) {
+			if (m[i] != null) {
+				System.out.println("아이디: " + m[i].id + "  " + "이름: " + m[i].name + "주소: " + m[i].ad);
+			}
+			break;
+		}
+
+	}
+
+	public void update() {
+		System.out.println("수정전 아이디를 입력해주세요.");
+		String I = in.nextLine();
+		System.out.println("수정할 아이디을 입력해주세요.");
+		String id = in.nextLine();
+		System.out.println("수정할 이름를 입력해주세요.");
+		String name = in.nextLine();
+		System.out.println("수정할 주소를 입력해주세요.");
+		String ad = in.nextLine();
+		Member M = new Member(id, name, ad);
+		Member tempmember = new Member(id,name,ad);
+		for(int i = 0; i<m.length; i++) {
+			if(m[i] != null && m[i].id.equals(I)) {
+				m[i]=tempmember;
+				break;
+			}
+				
+		}
+
+	}
+	public void delete() {
+		System.out.println("삭제할 아이디를 입력하세요.");
+		String I = in.nextLine();
+		for(int i = 0; i<m.length; i++) {
+			if(m[i] != null && m[i].id.equals(I)) {
+				m[i] = null;
+				break;
+			}
+		}
+	}
+
+	public void search() {
+
+	}
+}

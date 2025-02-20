@@ -1,0 +1,12 @@
+package user;
+
+public class Memo {
+	String title = null;
+	String content = null;
+	
+	Memo(String t, String c){
+		this.title = t;
+		this.content = c;
+	}
+	
+}

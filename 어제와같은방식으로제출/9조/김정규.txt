@@ -1,0 +1,253 @@
+오늘의 미션
+
+오늘은 회원관리 프로그램을 개발합시다.
+
+요구사항1
+회원은 아이디와 이름과 주소를 입력합니다.
+회원은 등록, 전체보기, 삭제, 수정 기능이 있습니다.
+
+요구사항2
+회원 검색 기능을 추가합니다.
+검색어가 부분일치 해도 검색하여 출력합니다.
+
+요구사항3
+회원 가입시 회원의 미성년자여부를 입력한다.
+미성년자일 경우 전체보기  실행 시 이름뒤에 미성년자라고 표시한다.
+
+요구사항4
+회원은 취미를5개까지 입력할 수 있다. 
+수정기능을
+
+ 1번 기본정보수정과 2번 취미등록으로 나눈다.
+
+취미는 최대 5개까지 입력할 수 있다. 
+
+요구사항5
+회원은 자신의 메모를 작성할 수 있다. 
+
+메모는 제목과 내용이다.
+메모는 최대 10개까지 작성할 수 있다.
+메모는 회원등록 후 작성이 가능하다..
+
+
+-----------------------------------------------------------------------
+class
+  
+0. 회원 관리 ( 메서드-> 등록, 전체보기(미성년자 체크), 삭제, 수정,  검색기능)
+1. 회원  ( 아이디, 이름, 주소, 미성년자 여부 ) +  취미 객체 5개 생성 +  메모 객체 10개 생성 
+2. 취미 ( 이름 , 내용 ) 
+3. 메모 ( 제목 , 내용)  
+3. main ( 메뉴 1. 2. 3. 4. ) 
+
+
+<Main>
+
+package day0219;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+
+public class Main {
+
+    static MemberManagement memberManagement = new MemberManagement();;
+
+    static int index = 0;
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        while(true) {
+            System.out.println(" 1 = 회원등록 ||  2 = 회원 전체보기 || 3 = 회원 삭제 || 4 = 회원 수정(기본정보수정,취미등록) " +
+                    "|| 5 = 회원 검색 || 6 =  회원 로그인(메모작성) || 7 = 종료");
+            int num = Integer.parseInt(br.readLine());
+            if (num == 1){
+                System.out.println("회원 아이디와 이름 주소 나이를 입력하세요.");
+                memberManagement.add(br.readLine(),br.readLine(), br.readLine(), Integer.parseInt(br.readLine()));
+            }else if (num == 2){
+                memberManagement.printAll();
+            }else if (num == 3){
+                System.out.println("삭제하고 싶은 회원 아이디를 입력하세요.");
+                memberManagement.remove(br.readLine());
+            }else if (num == 4){
+                System.out.println("수정하고 싶은 회원 아이디를 입력하세요.");
+                memberManagement.update(br.readLine());
+            }else if (num == 5){
+                System.out.println("검색하고 싶은 회원 id를 입력하세요.");
+                memberManagement.search(br.readLine());
+            }else if (num == 6){
+                System.out.println("로그인할 아이디를 입력하세요. ");
+                String memberId = br.readLine();
+                int temp = -1;
+                for (int i = 0; i < MemberManagement.member.length; i++) {
+                    if (memberManagement.member[i] != null && MemberManagement.member[i].id.equals(memberId)) {
+                        temp = i;
+                    }
+                }
+                if (temp == -1){
+                    System.out.println("로그인할 아이디가 없습니다. ");
+                    continue ;
+                }
+                System.out.println("메모할 제목과 내용을 적으세요.");
+                memberManagement.member[temp].addMemo(br.readLine(), br.readLine());
+            }else if (num == 7){
+                break ;
+            }
+
+        }
+    }
+}
+
+<MemberManagement>-----------------------------------------------------------------------------------------------
+
+package day0219;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+public class MemberManagement {
+    static Member[] member = new Member[50];
+    static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+    public static void add(String id, String name, String address, int age) {
+        for (int i = 0; i < member.length; i++)
+            if (member[i] == null) {
+                boolean ageCheck = false;
+                if (age <= 19)
+                    ageCheck = true;
+                member[i] = new Member(id, name, address, ageCheck);
+                break ;
+            }
+    }
+    public static void remove(String id) {
+        for (int i = 0; i < member.length; i++){
+            if (member[i] != null && member[i].id.equals(id)) {
+                member[i] = null;
+                break ;
+            }
+        }
+
+    }
+    public static void update(String id) throws IOException {
+        int index = -1;
+        for (int i = 0; i < member.length; i++) {
+            if (member[i] != null && member[i].id.equals(id)) {
+                index = i;
+            }
+        }
+        if (index == -1){
+            System.out.println("해당 아이디가 없습니다. ");
+            return ;
+        }
+        System.out.println("1번 기본정보수정 || 2번 취미등록 입력하세요.");
+        int num = Integer.parseInt(br.readLine()) ;
+        if (num == 1){
+            System.out.println("이름 주소 나이를 적으세요.");
+            member[index].name = br.readLine();
+            member[index].address = br.readLine();
+            boolean ageCheck = false;
+            if (Integer.parseInt(br.readLine()) <= 19)
+                ageCheck = true;
+            member[index].checkAge = ageCheck;
+        }else if (num == 2){
+            System.out.println("취미 이름 과 내용을 적으세요");
+            member[index].addHobby(br.readLine(), br.readLine());
+        }
+    }
+    public static void search(String id){
+        for (int i = 0; i < member.length; i++) {
+            if (member[i] != null  && member[i].id.contains(id)) {
+                System.out.println("회원 아이디 = " + member[i].id);
+            }
+        }
+    }
+    public static void printAll(){
+        for (int i = 0; i < member.length; i++){
+            if (member[i] != null){
+                System.out.print(member[i].id + " " + member[i].name + " " + member[i].address);
+                if (member[i].checkAge)
+                    System.out.println(" 미성년자 ");
+                else
+                    System.out.println();
+            }
+        }
+    }
+
+}
+
+
+<Member>-----------------------------------------------------------------------------------------------
+
+package day0219;
+
+public class Member {
+    String id;
+    String name;
+    String address;
+    boolean checkAge = false;
+    static Memo[] memo = new Memo[10];
+    static Hobby[] hobby = new Hobby[5];
+
+    public Member(String id, String name, String address, boolean checkAge) {
+        this.id = id;
+        this.name = name;
+        this.address = address;
+        this.checkAge = checkAge;
+    }
+    public static void addHobby(String newHobby, String contentHobby) {
+        for(int i = 0; i < hobby.length; i++){
+            if (hobby[i] == null ) {
+                hobby[i] = new Hobby(newHobby, contentHobby);
+                return ;
+            }
+        }
+        System.out.println("취미가 5개 초과했습니다. ");
+    }
+    public static void addMemo(String nameMemo, String contentMemo) {
+        for(int i = 0; i < memo.length; i++){
+            if (memo[i] == null ) {
+                memo[i] = new Memo(nameMemo, contentMemo);
+                return ;
+            }
+        }
+        System.out.println("메모가 10개를 초과했습니다.");
+    }
+}
+
+<Hobby>-----------------------------------------------------------------------
+package day0219;
+
+public class Hobby {
+    String title;
+    String content;
+
+    public Hobby(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
+}
+
+<Memo>-----------------------------------------------------------------------
+
+package day0219;
+
+public class Memo {
+    String title;
+    String content;
+
+    public Memo(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
+}
+
+
+-----------------------------------------------------------------------
+조  조원              
+1. 윤빈, 이재훈, 이지영 , 민경준
+2. 홍민우, 고강민, 이호준
+3. 박성준, 이동훈, 김도윤 
+6. 박정환, 정진, 박호영
+7. 정회성, 강이영, 이민우
+9. 조준아, 김정규, 강성대
+10. 서호진,  서익희 

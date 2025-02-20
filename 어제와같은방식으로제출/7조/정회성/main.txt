@@ -1,0 +1,13 @@
+package user;
+
+public class Main { // 시작의 책임을  갖고 있는 클래스
+
+	public static void main(String[] args) { 
+
+		System.out.println("프로그램을 시작합니다.");
+		
+		new UserManager(); // 객체 생성 생성자(인자); 생성자를 call하여 객체를 생성
+		
+	}
+
+}

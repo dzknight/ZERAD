@@ -1,0 +1,90 @@
+회원 프로젝트 MemberProject
+
+패키지
+member
+
+클래스
+
+메인
+member
+
+회원 member
+변수선언
+String id = null;
+String name = null;
+String addr = null;
+member(String id, String name, String addr){
+	this.id=id;
+	this.name=name;
+	this.addr=addr;
+
+
+회원관리 membermanaser
+회원은 아이디와 이름과 주소를 입력합니다
+등록, 전체보기, 삭제, 수정 기능이
+검색어가 부분일치 해도 검색하여 출력합니다.
+
+메서드
+
+1. 등록(아이디 이름 주소)
+
+2. 전체보기
+
+3. 삭제
+
+4. 수정
+
+5. 검색
+
+메서드 나누기 참고
+	//메뉴선택
+	private void menu() {
+				
+	}
+	//등록하기
+	private void input() {
+		
+	}
+	//전체보기
+	private void allList() {
+		
+	}
+	//삭제기능
+	private void delete() {		
+		
+	}
+	//수정하기
+	private void revise() {
+		
+	}
+	//검색하기
+	private void search() {
+		
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

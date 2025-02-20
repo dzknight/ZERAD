@@ -1,0 +1,72 @@
+package user;
+
+import java.util.Scanner;
+
+public class User {
+	String id = null;
+	String name = null;
+	String addr = null;
+	boolean minors = false;
+	String[] hobby = new String[5];
+	Memo[] memo = new Memo[10];
+	
+	User(String id, String name, String addr ,boolean minors){
+		this.id = id;
+		this.name = name;
+		this.addr = addr;
+		this.minors = minors; 
+	}
+	
+	public void AddHobby() {
+		Scanner in = new Scanner(System.in);
+		for(int i = 0; i<hobby.length; i++) {
+			if(hobby[i]  == null) {
+				System.out.println("등록하실 취미를 입력해 주세요.");
+				hobby[i] = in.nextLine();
+				System.out.println("등록되었습니다.");
+				break;
+			}
+			if(i==hobby.length-1) {
+				System.out.println("등록가능한 취미갯수를 초과하였습니다.");
+			}
+		}
+	}
+	public void viewHobby() {
+		System.out.println("취미목록: ");
+		for(int i = 0; i<hobby.length; i++) {
+			if(hobby[i] != null) {
+				System.out.print(hobby[i] + " ");
+			}
+		}
+		System.out.println();
+	}
+	
+	public void AddMemo() {
+		Scanner in = new Scanner(System.in);
+		for(int i = 0; i<memo.length; i++) {
+			if(memo[i]  == null) {
+				System.out.println("등록하실 메모 제목을 입력해 주세요.");
+				String title = in.nextLine();
+				System.out.println("등록하실 메모 내용을 입력해 주세요.");
+				String content = in.nextLine();
+				memo[i] = new Memo(title,content);
+				System.out.println("등록되었습니다.");
+				break;
+			}
+			if(i==memo.length-1) {
+				System.out.println("등록가능한 메모갯수를 초과하였습니다.");
+			}
+		}
+	}
+	public void viewMemo() {
+		for(int i = 0; i<memo.length; i++) {
+			if(memo[i] != null) {
+				System.out.printf("%d번째 메모제목: %s\n",i+1 ,memo[i].title);
+				System.out.printf("내용: %s\n", memo[i].content);
+			}
+		}
+	}
+	
+	
+	
+}

@@ -1,0 +1,229 @@
+package user;
+
+import java.util.Scanner;
+
+public class UserManager {
+	User[] userList = new User[10];
+	Scanner in = new Scanner(System.in);
+	UserManager(){
+		System.out.println("회원관리 프로그램");
+		
+		while(true){
+			System.out.println("원하시는 기능을 선택해주세요.");
+			System.out.println("1.등록, 2.전체보기, 3.삭제, 4.수정  5.검색 6.메모 (종료 'q')");
+			String num = in.nextLine();
+			if(num.equals("1")) {
+				add();
+			}else if(num.equals("2")) {
+				allList();
+			}else if(num.equals("3")) {
+				delete();
+			}else if(num.equals("4")) {
+				mod();
+			}else if(num.equals("5")){
+				search();
+			}else if(num.equals("6")) {
+				memo();
+			}else if(num.equals("q")) {
+				System.out.println("종료");
+				break;
+			}else {
+				System.out.println("잘못된 번호입니다.");
+			}
+		}
+	}
+	
+	public void add() {
+		boolean minors;
+		System.out.println("등록");
+		for(int i = 0; i<userList.length; i++) {
+			if(userList[i] == null) {
+				System.out.println("아이디를 입력하세요");
+				String id = in.nextLine();
+				for(int j = 0; j < userList.length; j++) {
+					if(userList[j]!=null&&userList[j].id.equals(id)) {
+						System.out.println("중복입니다 아이디를 다시입력해주세요");
+						id = in.nextLine();
+						j = -1;
+					}
+				}
+				System.out.println("이름을 입력하세요");
+				String name = in.nextLine();
+				System.out.println("주소를 입력하세요");
+				String addr = in.nextLine();
+				while(true) {
+					System.out.println("미성년자여부를 체크해 주세요 1.예  2.아니오");
+					String a = in.nextLine();
+					if(a.equals("1")) {
+						minors = true;
+						break;
+					}else if(a.equals("2")) {
+						minors = false;
+						break;
+					}else {
+						System.out.println("잘못 입력하셨습니다. 다시 입력해주세요");
+					}
+				}
+				User tempUser = new User(id,name,addr,minors);
+				userList[i] = tempUser;
+				break;
+			}
+			if(i == userList.length-1) {
+				System.out.println("등록가능한 회원갯수를 초과하였습니다.");
+			}
+		}
+	}
+	
+	
+	public void allList() {
+		System.out.println("전체보기");
+		for(int  i = 0; i<userList.length; i++) {
+			if(userList[i] != null) {
+				System.out.printf("회원번호 %d. 아이디: %s, 이름: %s, 주소: %s ",i+1, userList[i].id, userList[i].name, userList[i].addr);
+				if(userList[i].minors)
+					System.out.print(", 미성년자");
+				System.out.println();
+			}
+		}
+	}
+	
+	public void delete() {
+		System.out.println("식제");
+		System.out.println("삭제할 회원 이름을 입력해주세요");
+		String id = in.nextLine();
+		for(int i = 0; i < userList.length; i++) {
+			if(userList[i] != null && userList[i].name.equals(id)) {
+				userList[i] = null;
+				System.out.println("삭제되었습니다");
+				break;
+			}
+			if(i == userList.length-1) {
+				System.out.println("입력하신 회원정보가 없습니다.");
+			}
+		}
+	}
+	
+	
+	public void mod() {
+
+		System.out.println("수정");
+		System.out.println("수정할 회원 이름을 입력해주세요");
+		String id = in.nextLine();
+		for(int i = 0; i < userList.length; i++) {
+			if(userList[i] != null && userList[i].name.equals(id)) {
+				System.out.println("수정기능을 선택해 주세요");
+				System.out.println("1.기본정보수정, 2.취미등록, 3.종료");
+				String num = in.nextLine();
+				if(num.equals("1")) {
+					for(int j = 0; j < 1;) {
+						System.out.println("수정할 부분을 선택해 주세요");
+						System.out.println("1.아이디, 2.이름, 3.주소, 4.미성년자여부, 5.종료");
+						num = in.nextLine();
+						if(num.equals("1")) {
+							System.out.println("수정하신 아이디를 입력해 주세요");
+							userList[i].id = in.nextLine();
+						}else if(num.equals("2")) {
+							System.out.println("수정하신 이름을 입력해 주세요");
+							userList[i].name = in.nextLine();
+						}else if(num.equals("3")) {
+							System.out.println("수정하신 주소를 입력해 주세요");
+							userList[i].addr = in.nextLine();
+						}else if(num.equals("4")) {
+							while(true) {
+								System.out.println("수정하신 미성년자여부를 입력해해세요 1.예  2.아니오");
+								int a = in.nextInt();
+								in.nextLine();
+								if(a == 1) {
+									userList[i].minors = true;
+									break;
+								}else if( a==2 ) {
+									userList[i].minors = false;
+									break;
+								}else {
+									System.out.println("잘못 입력하셨습니다. 다시 입력해주세요");
+								}
+							}
+						}else if(num.equals("5")) {
+							System.out.println("종료");
+							j++;
+							i = userList.length;
+						}else {
+							System.out.println("잘못된 번호입니다. 다시 입력해주세요");
+							j--;
+						}
+						
+					}
+				}else if(num.equals("2")) {
+					while(true) {
+						System.out.println("원하시는 기능을 입력해주세요 1.취미등록  2.취미확인");
+						int a = in.nextInt();
+						in.nextLine();
+						if(a == 1) {
+							userList[i].AddHobby();
+							i = userList.length;
+							break;
+						}else if( a==2 ) {
+							userList[i].viewHobby();
+							i = userList.length;
+							break;
+						}else {
+							System.out.println("잘못 입력하셨습니다. 다시 입력해주세요");
+						}
+					}
+					
+				}else if(num.equals("3")) {
+					System.out.println("종료");
+					break;
+				}else {
+					System.out.println("잘못 입력하였습니다. 다시 입력해주세요");
+					i--;
+				}
+				
+			}
+			if(i == userList.length-1) {
+				System.out.println("입력하신 회원정보가 없습니다.");
+			}
+		}
+		
+	}
+	
+	public void search() {
+		System.out.println("찾으시는 회원 이름을 입력해주세요");
+		String name = in.nextLine();
+		for(int i = 0; i < userList.length; i++) {
+			if(userList[i] != null && userList[i].name.contains(name)) {
+				System.out.printf("회원번호 %d. 아이디: %s, 이름: %s, 주소: %s ",i+1, userList[i].id, userList[i].name, userList[i].addr);
+				if(userList[i].minors)
+					System.out.print(", 미성년자");
+				System.out.println();
+			}
+		}
+	}
+	
+	public void memo() {
+		System.out.println("회원 이름을 입력해 주세요.");
+		String name = in.nextLine();
+		for(int i = 0; i < userList.length; i++) {
+			if(userList[i] != null && userList[i].name.equals(name)) {
+				while(true) {
+					System.out.println("1.메모등록 2.메모확인 3.종료");
+					String num = in.nextLine();
+					if(num.equals("1")) {
+						userList[i].AddMemo();
+					}else if(num.equals("2")) {
+						userList[i].viewMemo();
+					}else if(num.equals("3")) {
+						break;
+					}else {
+						 System.out.println("잘못된 번호입니다.");
+					}
+				}
+				break;
+			}
+			if(i == userList.length-1) {
+				System.out.println("입력하신 회원정보가 없습니다.");
+			}
+		}
+	}
+		
+}
