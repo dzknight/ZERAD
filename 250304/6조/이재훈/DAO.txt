@@ -1,0 +1,111 @@
+package menu;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class MenuDAO {
+	private String driver = "oracle.jdbc.driver.OracleDriver";
+	private String url = "jdbc:oracle:thin:@localhost:1521:orcl";
+
+	MenuDAO() {
+		init();
+	}
+
+	private void init() {
+		try {
+			Class.forName(driver);
+			// 라이브러리를 로드하는 의미.
+			// 이 라이브러리는 오라클에 CURD를 위한 클래스들이 있음
+			System.out.println("클래스 load 성공");
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void insert(MenuDTO m) {
+		try {
+			Connection conn = DriverManager.getConnection(url, "system", "1111"); // ←연결하기
+			System.out.println("연결성공");
+			String sql = "insert into menu values (?,?,?)";
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			stmt.setInt(1, m.getNo());
+			stmt.setString(2, m.getMenuname());
+			stmt.setString(3, m.getPrice());
+			int result = stmt.executeUpdate();
+			System.out.println(result + "건 삽입");
+			stmt.close();
+			conn.close();
+		} catch (Exception e) {
+		}
+	}
+
+	public ArrayList<MenuDTO> selectAll() {
+		ArrayList<MenuDTO> mlist = new ArrayList<>();
+		try {
+			Connection conn = DriverManager.getConnection(url, "system", "1111");
+			System.out.println("연결성공");
+			String sql = "select * from menu";
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				MenuDTO m = new MenuDTO();
+				m.setNo(rs.getInt("no"));
+				m.setMenuname(rs.getString("menuname"));
+				m.setPrice(rs.getString("price"));
+				mlist.add(m);
+			}
+		} catch (Exception e) {
+
+		}
+		return mlist;
+	}
+
+	public void delete(int no) {
+		try {
+			Connection conn = DriverManager.getConnection(url, "system", "1111");
+			System.out.println("연결성공");
+			String sql = "delete from menu where no=?";
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			MenuDTO m = new MenuDTO();
+			stmt.setInt(1, no);
+			stmt.executeUpdate();
+			stmt.close();
+			conn.close();
+		} catch (Exception e) {
+			
+		}
+	}
+	public void mod(int no) {
+		Scanner in = new Scanner(System.in);
+		try {
+			Connection conn = DriverManager.getConnection(url, "system", "1111");
+			System.out.println("연결성공");
+			System.out.println("변경후 메뉴번호를 입력하세요");
+			int no1 = in.nextInt();
+			in.nextLine();
+			System.out.println("변경후 메뉴이름을 입력하세요");
+			String menuname = in.nextLine();
+			System.out.println("변경후 메뉴가격을 입력하세요");
+			String price = in.nextLine();
+			
+			String sql = "update menu set no=?, menuname=?, price=? where no=?";
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			MenuDTO m = new MenuDTO();
+			stmt.setInt(4, no);
+			stmt.setInt(1, no1);
+			stmt.setString(2, menuname);
+			stmt.setString(3, price);
+			stmt.executeUpdate();
+			stmt.close();
+			conn.close();
+			
+		}catch (Exception e) {
+			
+		}
+	}
+}

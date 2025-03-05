@@ -1,0 +1,79 @@
+package menu;
+
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class MenuAdmin {
+	private MenuDAO menudao = new MenuDAO();
+
+
+	MenuAdmin(){
+	         Scanner in = new Scanner(System.in);
+	         boolean flag = true;
+	         while(flag) {
+	            System.out.println("1.등록  2.전체보기 3.삭제하기 4.수정하기");
+	            int a = in.nextInt();
+	            in.nextLine();
+	            switch(a) {
+	            case 1: add();
+	               break;
+	            case 2: allList();
+	               break;
+	            case 3:delete(); break;
+	            case 4:mod();
+	            break;
+	            default : flag=false;
+	               break;
+	            }
+	}
+
+}
+
+
+	private void mod() {
+		MenuDTO menu = new MenuDTO();
+		Scanner in = new Scanner(System.in);
+		System.out.println("변경전 메뉴번호를 입력하세요");
+		int a = in.nextInt();
+		in.nextLine();
+		menudao.mod(a);
+	}
+
+
+	private void add() {
+		Scanner in = new Scanner(System.in);
+		System.out.println("---- 메뉴등록 ----");
+		System.out.println("메뉴번호를 입력하세요.");
+		int no = in.nextInt();
+		in.nextLine();
+		System.out.println("메뉴 이름을 입력하세요.");
+		String menuname = in.nextLine();
+		System.out.println("메뉴 가격을 입력하세요.");
+		String price = in.nextLine();
+		MenuDTO menu = new MenuDTO();
+		menu.setNo(no);
+		menu.setMenuname(menuname);
+		menu.setPrice(price);
+		menudao.insert(menu);
+	}
+
+
+	private void allList() {
+		ArrayList<MenuDTO> m = menudao.selectAll();
+		for(MenuDTO mm:m) {
+			mm.prt();
+		}
+		
+		
+	}
+
+
+	private void delete() {
+		Scanner in = new Scanner(System.in);
+		System.out.println("삭제할 메뉴번호를 입력하세요.");
+		int no = in.nextInt();
+		in.nextLine();
+		menudao.delete(no);
+		}
+	
+}

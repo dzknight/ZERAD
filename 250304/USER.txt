@@ -1,0 +1,156 @@
+public class Main {
+
+	public static void main(String[] args) {
+		new UserAdmin();
+
+	}
+
+}
+
+
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class UserAdmin {
+	private UserDAO userdao = new UserDAO();
+	UserAdmin(){
+		Scanner in = new Scanner(System.in);
+		boolean f=true;
+		while(f) {
+			System.out.println("1. 추가  2.전체보기");
+			int a=in.nextInt();
+			in.nextLine();
+			switch(a) {
+			case 1:
+				add();
+				break;
+			case 2 :
+				allList();
+				break;
+			default:
+				f=false;
+			}
+			
+		}
+	}
+	private void allList() {
+		//전체보기  select + from user1;
+		ArrayList<UserDTO> u= userdao.selectAll();
+		for(UserDTO uu: u) {
+			uu.prt();
+		}
+		
+	}
+	private void add() {
+		Scanner in =new Scanner(System.in);
+		//사용자 추가
+		//회원의 이름과 아이디를 입력받는다
+		String name=in.nextLine();
+		String id=in.nextLine();
+		//회원의 객체를 만든다
+		UserDTO user = new UserDTO();
+		//회원 객체에 입력받는 이름과 아이디를 매핑한다
+		user.setName(name);
+		user.setId(id);
+		//회원 객체를 데이터베이스에 저장한다
+		userdao.insert(user);
+		
+	}
+
+}
+import java.sql.Statement;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+
+public class UserDAO {
+	private String driver = "oracle.jdbc.driver.OracleDriver";
+	private String url ="jdbc:oracle:thin:@localhost:1521:orcl1";
+	UserDAO(){
+		init();
+		
+	}
+	private void init() {
+		try {
+			Class.forName(driver);
+			//라이브러리를 로드하는 의미
+			//이 라이브러리는 오라클에 crud를 위한 클래스들이 있음
+			System.out.println("클래스 load 성공");
+		}catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	public void insert(UserDTO u) {
+		try {
+			//연결하기
+			Connection conn =
+					DriverManager.getConnection(url,"system","1111");
+			System.out.println("연결성공");
+			//쿼리문 정의
+			String sql = "insert into user1 values (?,?)";
+			//statement 생성
+			PreparedStatement stmt= conn.prepareStatement(sql);
+			//물음표가 있을떈 preparedStatement 사용
+			stmt.setString(1, u.getName());
+			stmt.setString(2, u.getId());
+			//쿼리전송및 결과값 받기
+			int result =stmt.executeUpdate();
+			System.out.println(result +"건 삽입");
+			//연결해제 -자원반납
+			stmt.close();
+			conn.close();
+		}catch(Exception e) {
+			
+		}
+	}
+	public ArrayList<UserDTO> selectAll(){
+		ArrayList<UserDTO> ulist = new ArrayList<>();
+		try {
+		//연결설정,쿼리만들기,매핑,퀴리실행,리턴값 받기
+			Connection conn =
+					DriverManager.getConnection(url,"system","1111");
+			System.out.println("연결성공");
+			String sql="select * from user1";
+			Statement stmt = conn.createStatement();
+			//물음표가 없을땐 Statement사용
+			ResultSet rs = stmt.executeQuery(sql);
+			while(rs.next()) {
+				UserDTO u= new UserDTO();
+				u.setId(rs.getString("id"));
+				u.setName(rs.getString("name"));
+				ulist.add(u);
+			
+			}
+		}catch(Exception e) {
+				
+		}return ulist;
+		
+		
+	}
+
+}
+
+public class UserDTO {
+	private String name;
+	private String id;
+	
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public void prt() {
+		System.out.println("id :"+ this.id);
+		System.out.println("name :"+ this.name);
+	}
+
+}
