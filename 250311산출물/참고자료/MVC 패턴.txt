@@ -1,0 +1,516 @@
+오라클 연동과 상속을 이용하여 자바 MVC 패턴을 알수있는 예제
+
+
+답변
+오라클 연동과 상속을 이용한 자바 MVC 패턴 예제를 살펴보겠습니다. 이 예제는 직원 관리 시스템을 구현하며, 오라클 데이터베이스와 연동하고 상속을 활용하여 MVC 패턴을 구현합니다.
+
+1. 데이터베이스 설정
+먼저 오라클 데이터베이스에 다음과 같은 테이블을 생성합니다:
+
+sql
+CREATE TABLE employees (
+    employee_id NUMBER PRIMARY KEY,
+    first_name VARCHAR2(50),
+    last_name VARCHAR2(50),
+    email VARCHAR2(100),
+    phone VARCHAR2(20),
+    hire_date DATE,
+    salary NUMBER(10,2),
+    department_id NUMBER
+);
+
+CREATE TABLE departments (
+    department_id NUMBER PRIMARY KEY,
+    department_name VARCHAR2(100),
+    location VARCHAR2(100)
+);
+2. Model 계층
+기본 모델 클래스 (상속의 기반)
+java
+// BaseModel.java
+package model;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public abstract class BaseModel {
+    protected Connection connection;
+    private static final String URL = "jdbc:oracle:thin:@localhost:1521:XE";
+    private static final String USER = "hr";
+    private static final String PASSWORD = "hr";
+    
+    protected BaseModel() {
+        try {
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    protected Connection getConnection() throws SQLException {
+        if (connection == null || connection.isClosed()) {
+            connection = DriverManager.getConnection(URL, USER, PASSWORD);
+        }
+        return connection;
+    }
+    
+    protected void closeConnection() {
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    // 모든 자식 클래스가 구현해야 하는 추상 메소드
+    public abstract Object findById(int id) throws SQLException;
+    public abstract boolean save(Object obj) throws SQLException;
+    public abstract boolean update(Object obj) throws SQLException;
+    public abstract boolean delete(int id) throws SQLException;
+}
+Employee 데이터 객체
+java
+// Employee.java
+package model;
+
+import java.util.Date;
+
+public class Employee {
+    private int employeeId;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phone;
+    private Date hireDate;
+    private double salary;
+    private int departmentId;
+    
+    // 생성자, getter, setter 메소드
+    public Employee() {}
+    
+    public Employee(int employeeId, String firstName, String lastName, 
+                    String email, String phone, Date hireDate, 
+                    double salary, int departmentId) {
+        this.employeeId = employeeId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phone = phone;
+        this.hireDate = hireDate;
+        this.salary = salary;
+        this.departmentId = departmentId;
+    }
+    
+    // Getter와 Setter 메소드
+    public int getEmployeeId() { return employeeId; }
+    public void setEmployeeId(int employeeId) { this.employeeId = employeeId; }
+    
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    
+    public Date getHireDate() { return hireDate; }
+    public void setHireDate(Date hireDate) { this.hireDate = hireDate; }
+    
+    public double getSalary() { return salary; }
+    public void setSalary(double salary) { this.salary = salary; }
+    
+    public int getDepartmentId() { return departmentId; }
+    public void setDepartmentId(int departmentId) { this.departmentId = departmentId; }
+}
+Department 데이터 객체
+java
+// Department.java
+package model;
+
+public class Department {
+    private int departmentId;
+    private String departmentName;
+    private String location;
+    
+    // 생성자, getter, setter 메소드
+    public Department() {}
+    
+    public Department(int departmentId, String departmentName, String location) {
+        this.departmentId = departmentId;
+        this.departmentName = departmentName;
+        this.location = location;
+    }
+    
+    // Getter와 Setter 메소드
+    public int getDepartmentId() { return departmentId; }
+    public void setDepartmentId(int departmentId) { this.departmentId = departmentId; }
+    
+    public String getDepartmentName() { return departmentName; }
+    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+    
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+}
+EmployeeModel (BaseModel 상속)
+java
+// EmployeeModel.java
+package model;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class EmployeeModel extends BaseModel {
+    
+    @Override
+    public Employee findById(int id) throws SQLException {
+        Employee employee = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            String sql = "SELECT * FROM employees WHERE employee_id = ?";
+            pstmt = getConnection().prepareStatement(sql);
+            pstmt.setInt(1, id);
+            rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                employee = new Employee();
+                employee.setEmployeeId(rs.getInt("employee_id"));
+                employee.setFirstName(rs.getString("first_name"));
+                employee.setLastName(rs.getString("last_name"));
+                employee.setEmail(rs.getString("email"));
+                employee.setPhone(rs.getString("phone"));
+                employee.setHireDate(rs.getDate("hire_date"));
+                employee.setSalary(rs.getDouble("salary"));
+                employee.setDepartmentId(rs.getInt("department_id"));
+            }
+        } finally {
+            if (rs != null) rs.close();
+            if (pstmt != null) pstmt.close();
+            closeConnection();
+        }
+        
+        return employee;
+    }
+    
+    public List<Employee> findAll() throws SQLException {
+        List<Employee> employees = new ArrayList<>();
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            String sql = "SELECT * FROM employees ORDER BY employee_id";
+            pstmt = getConnection().prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            
+            while (rs.next()) {
+                Employee employee = new Employee();
+                employee.setEmployeeId(rs.getInt("employee_id"));
+                employee.setFirstName(rs.getString("first_name"));
+                employee.setLastName(rs.getString("last_name"));
+                employee.setEmail(rs.getString("email"));
+                employee.setPhone(rs.getString("phone"));
+                employee.setHireDate(rs.getDate("hire_date"));
+                employee.setSalary(rs.getDouble("salary"));
+                employee.setDepartmentId(rs.getInt("department_id"));
+                
+                employees.add(employee);
+            }
+        } finally {
+            if (rs != null) rs.close();
+            if (pstmt != null) pstmt.close();
+            closeConnection();
+        }
+        
+        return employees;
+    }
+    
+    @Override
+    public boolean save(Object obj) throws SQLException {
+        Employee employee = (Employee) obj;
+        PreparedStatement pstmt = null;
+        
+        try {
+            String sql = "INSERT INTO employees (employee_id, first_name, last_name, email, phone, hire_date, salary, department_id) " +
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            pstmt = getConnection().prepareStatement(sql);
+            pstmt.setInt(1, employee.getEmployeeId());
+            pstmt.setString(2, employee.getFirstName());
+            pstmt.setString(3, employee.getLastName());
+            pstmt.setString(4, employee.getEmail());
+            pstmt.setString(5, employee.getPhone());
+            pstmt.setDate(6, new java.sql.Date(employee.getHireDate().getTime()));
+            pstmt.setDouble(7, employee.getSalary());
+            pstmt.setInt(8, employee.getDepartmentId());
+            
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } finally {
+            if (pstmt != null) pstmt.close();
+            closeConnection();
+        }
+    }
+    
+    @Override
+    public boolean update(Object obj) throws SQLException {
+        Employee employee = (Employee) obj;
+        PreparedStatement pstmt = null;
+        
+        try {
+            String sql = "UPDATE employees SET first_name=?, last_name=?, email=?, phone=?, " +
+                         "hire_date=?, salary=?, department_id=? WHERE employee_id=?";
+            pstmt = getConnection().prepareStatement(sql);
+            pstmt.setString(1, employee.getFirstName());
+            pstmt.setString(2, employee.getLastName());
+            pstmt.setString(3, employee.getEmail());
+            pstmt.setString(4, employee.getPhone());
+            pstmt.setDate(5, new java.sql.Date(employee.getHireDate().getTime()));
+            pstmt.setDouble(6, employee.getSalary());
+            pstmt.setInt(7, employee.getDepartmentId());
+            pstmt.setInt(8, employee.getEmployeeId());
+            
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } finally {
+            if (pstmt != null) pstmt.close();
+            closeConnection();
+        }
+    }
+    
+    @Override
+    public boolean delete(int id) throws SQLException {
+        PreparedStatement pstmt = null;
+        
+        try {
+            String sql = "DELETE FROM employees WHERE employee_id=?";
+            pstmt = getConnection().prepareStatement(sql);
+            pstmt.setInt(1, id);
+            
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } finally {
+            if (pstmt != null) pstmt.close();
+            closeConnection();
+        }
+    }
+}
+DepartmentModel (BaseModel 상속)
+java
+// DepartmentModel.java
+package model;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DepartmentModel extends BaseModel {
+    
+    @Override
+    public Department findById(int id) throws SQLException {
+        Department department = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            String sql = "SELECT * FROM departments WHERE department_id = ?";
+            pstmt = getConnection().prepareStatement(sql);
+            pstmt.setInt(1, id);
+            rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                department = new Department();
+                department.setDepartmentId(rs.getInt("department_id"));
+                department.setDepartmentName(rs.getString("department_name"));
+                department.setLocation(rs.getString("location"));
+            }
+        } finally {
+            if (rs != null) rs.close();
+            if (pstmt != null) pstmt.close();
+            closeConnection();
+        }
+        
+        return department;
+    }
+    
+    public List<Department> findAll() throws SQLException {
+        List<Department> departments = new ArrayList<>();
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            String sql = "SELECT * FROM departments ORDER BY department_id";
+            pstmt = getConnection().prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            
+            while (rs.next()) {
+                Department department = new Department();
+                department.setDepartmentId(rs.getInt("department_id"));
+                department.setDepartmentName(rs.getString("department_name"));
+                department.setLocation(rs.getString("location"));
+                
+                departments.add(department);
+            }
+        } finally {
+            if (rs != null) rs.close();
+            if (pstmt != null) pstmt.close();
+            closeConnection();
+        }
+        
+        return departments;
+    }
+    
+    @Override
+    public boolean save(Object obj) throws SQLException {
+        Department department = (Department) obj;
+        PreparedStatement pstmt = null;
+        
+        try {
+            String sql = "INSERT INTO departments (department_id, department_name, location) VALUES (?, ?, ?)";
+            pstmt = getConnection().prepareStatement(sql);
+            pstmt.setInt(1, department.getDepartmentId());
+            pstmt.setString(2, department.getDepartmentName());
+            pstmt.setString(3, department.getLocation());
+            
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } finally {
+            if (pstmt != null) pstmt.close();
+            closeConnection();
+        }
+    }
+    
+    @Override
+    public boolean update(Object obj) throws SQLException {
+        Department department = (Department) obj;
+        PreparedStatement pstmt = null;
+        
+        try {
+            String sql = "UPDATE departments SET department_name=?, location=? WHERE department_id=?";
+            pstmt = getConnection().prepareStatement(sql);
+            pstmt.setString(1, department.getDepartmentName());
+            pstmt.setString(2, department.getLocation());
+            pstmt.setInt(3, department.getDepartmentId());
+            
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } finally {
+            if (pstmt != null) pstmt.close();
+            closeConnection();
+        }
+    }
+    
+    @Override
+    public boolean delete(int id) throws SQLException {
+        PreparedStatement pstmt = null;
+        
+        try {
+            String sql = "DELETE FROM departments WHERE department_id=?";
+            pstmt = getConnection().prepareStatement(sql);
+            pstmt.setInt(1, id);
+            
+            int result = pstmt.executeUpdate();
+            return result > 0;
+        } finally {
+            if (pstmt != null) pstmt.close();
+            closeConnection();
+        }
+    }
+}
+3. View 계층
+기본 뷰 클래스 (상속의 기반)
+java
+// BaseView.java
+package view;
+
+public abstract class BaseView {
+    public abstract void displayMenu();
+    public abstract void displayAll(Object obj);
+    public abstract void displayById(Object obj);
+    public abstract void displaySuccessMessage(String operation);
+    public abstract void displayErrorMessage(String operation, String error);
+}
+EmployeeView (BaseView 상속)
+java
+// EmployeeView.java
+package view;
+
+import model.Employee;
+import java.text.SimpleDateFormat;
+import java.util.List;
+
+public class EmployeeView extends BaseView {
+    
+    @Override
+    public void displayMenu() {
+        System.out.println("\n===== 직원 관리 시스템 =====");
+        System.out.println("1. 모든 직원 조회");
+        System.out.println("2. 직원 ID로 조회");
+        System.out.println("3. 새 직원 추가");
+        System.out.println("4. 직원 정보 수정");
+        System.out.println("5. 직원 삭제");
+        System.out.println("0. 종료");
+        System.out.print("메뉴 선택: ");
+    }
+    
+    @Override
+    public void displayAll(Object obj) {
+        @SuppressWarnings("unchecked")
+        List<Employee> employees = (List<Employee>) obj;
+        
+        System.out.println("\n===== 직원 목록 =====");
+        System.out.printf("%-5s %-15s %-15s %-20s %-15s %-15s %-10s %-5s\n", 
+                         "ID", "이름", "성", "이메일", "전화번호", "입사일", "급여", "부서ID");
+        System.out.println("---------------------------------------------------------------------------------");
+        
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        
+        for (Employee employee : employees) {
+            System.out.printf("%-5d %-15s %-15s %-20s %-15s %-15s %-10.2f %-5d\n", 
+                             employee.getEmployeeId(), 
+                             employee.getFirstName(), 
+                             employee.getLastName(), 
+                             employee.getEmail(), 
+                             employee.getPhone(), 
+                             dateFormat.format(employee.getHireDate()), 
+                             employee.getSalary(), 
+                             employee.getDepartmentId());
+        }
+    }
+    
+    @Override
+    public void displayById(Object obj) {
+        if (obj == null) {
+            System.out.println("\n직원을 찾을 수 없습니다.");
+            return;
+        }
+        
+        Employee employee = (Employee) obj;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        
+        System.out.println("\n===== 직원 상세 정보 =====");
+        System.out.println("ID: " + employee.getEmployeeId());
+        System.out.println("이름: " + employee.getFirstName());
+        System.out.println("성: " + employee.getLastName());
+        System.out.println("이메일: " + employee.getEmail());
+        System.out.println("전화번호: " + employee.getPhone());
+        System.out.println("입사일: " + dateFormat.format(employee.getHireDate()));
+        System.out.println("급여: " + employee.getSalary());
+        System.out.println("부서ID: " + employee.getDepartmentId());
+    }
+    
+    @Override
+    public void displaySuccessMessage(String operation) {
+        System.out.println("\n성공: " + operation + " 작업이 성공적으로 완료되었습니다.");
+    }

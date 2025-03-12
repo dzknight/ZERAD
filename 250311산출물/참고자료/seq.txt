@@ -1,0 +1,17 @@
+CREATE SEQUENCE hm_seq
+START WITH 100
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+
+
+sql
+CREATE TABLE id_table (
+id VARCHAR2(20),
+name VARCHAR2(100)
+);
+
+
+sql
+INSERT INTO id_table (id, name)
+VALUES ('HM' || TO_CHAR(hm_seq.NEXTVAL), 'Sample Name');

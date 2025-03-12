@@ -1,0 +1,103 @@
+JSoup을 활용한 엔비디아 주식 실시간 조회 시스템
+프로젝트 개요
+JSoup 라이브러리를 활용하여 엔비디아(NVIDIA) 주식 정보를 실시간으로 가져오는 시스템
+
+웹 스크래핑 기술을 통해 금융 데이터를 자동으로 수집하고 분석
+
+투자자들에게 실시간 주가 정보 제공으로 신속한 의사결정 지원
+
+기술 스택
+Java: 핵심 프로그래밍 언어
+
+JSoup: HTML 파싱 및 웹 스크래핑 라이브러리
+
+ScheduledExecutorService: 주기적 데이터 수집 구현
+
+Maven/Gradle: 의존성 관리
+
+주요 기능
+엔비디아 주식 실시간 가격 조회
+
+주가 변동 추이 그래프 시각화
+
+거래량 및 시장 지표 분석
+
+알림 설정 기능 (특정 가격 도달 시)
+
+구현 방법
+1. JSoup 설치 및 설정
+java
+// Maven pom.xml 의존성 추가
+<dependency>
+    <groupId>org.jsoup</groupId>
+    <artifactId>jsoup</artifactId>
+    <version>1.16.1</version>
+</dependency>
+2. 기본 스크래핑 코드
+java
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+public class StockScraper {
+    public static void main(String[] args) {
+        try {
+            Document doc = Jsoup
+                .connect("https://finance.yahoo.com/quote/NVDA")
+                .userAgent("Mozilla/5.0")
+                .get();
+            
+            String stockPrice = doc.select("fin-streamer[data-field='regularMarketPrice']").text();
+            System.out.println("NVIDIA 현재 주가: " + stockPrice);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+3. 실시간 데이터 수집 구현
+java
+ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+scheduler.scheduleAtFixedRate(() -> {
+    // 주식 데이터 수집 로직
+    fetchStockData();
+}, 0, 1, TimeUnit.MINUTES);
+개발 과정
+1단계: 웹페이지 분석
+금융 정보 웹사이트의 HTML 구조 분석
+
+CSS 선택자를 통한 주가 정보 요소 식별
+
+2단계: 스크래핑 로직 구현
+JSoup을 사용한 HTML 파싱
+
+주가, 변동률, 거래량 등 데이터 추출
+
+3단계: 실시간 업데이트 시스템
+스케줄러를 통한 주기적 데이터 갱신
+
+스로틀링 적용으로 서버 부하 방지
+
+4단계: 사용자 인터페이스 개발
+수집된 데이터 시각화
+
+사용자 친화적 대시보드 구현
+
+주의사항 및 개선점
+웹사이트 구조 변경에 대응하는 유지보수 계획
+
+과도한 요청으로 인한 IP 차단 방지 전략
+
+데이터 정확성 검증 시스템 구축
+
+결론
+JSoup을 활용한 웹 스크래핑은 금융 데이터 수집에 효과적인 방법
+
+실시간 주식 정보 접근으로 투자 의사결정 지원
+
+확장 가능한 구조로 다양한 금융 상품 분석으로 확장 가능
+
+향후 계획
+머신러닝 모델 통합으로 주가 예측 기능 추가
+
+다양한 금융 상품으로 스크래핑 범위 확장
+
+모바일 앱 연동으로 언제 어디서나 정보 접근 가능

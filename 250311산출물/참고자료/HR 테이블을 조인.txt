@@ -1,0 +1,281 @@
+HR 테이블을 조인하여 데이터를 가져오는 클래스를 구현합니다.
+
+1. 데이터베이스 연결 싱글톤 클래스
+java
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DBConnectionSingleton {
+    // 싱글톤 인스턴스
+    private static DBConnectionSingleton instance;
+    
+    // 데이터베이스 연결 정보
+    private static final String DRIVER = "oracle.jdbc.driver.OracleDriver";
+    private static final String URL = "jdbc:oracle:thin:@localhost:1521:xe";
+    private static final String USER = "HR";
+    private static final String PASSWORD = "hr";
+    
+    // 생성자를 private으로 선언하여 외부에서 인스턴스 생성 방지
+    private DBConnectionSingleton() {
+        try {
+            Class.forName(DRIVER);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    // 싱글톤 인스턴스 반환 메소드
+    public static synchronized DBConnectionSingleton getInstance() {
+        if (instance == null) {
+            instance = new DBConnectionSingleton();
+        }
+        return instance;
+    }
+    
+    // 데이터베이스 연결 반환 메소드
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
+}
+2. 직원 정보를 담을 DTO 클래스
+java
+public class EmployeeDTO {
+    private int employeeId;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phoneNumber;
+    private String departmentName;
+    private String jobTitle;
+    private String city;
+    private String countryName;
+    private String regionName;
+    
+    // Getter와 Setter 메소드
+    public int getEmployeeId() { return employeeId; }
+    public void setEmployeeId(int employeeId) { this.employeeId = employeeId; }
+    
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+    
+    public String getDepartmentName() { return departmentName; }
+    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+    
+    public String getJobTitle() { return jobTitle; }
+    public void setJobTitle(String jobTitle) { this.jobTitle = jobTitle; }
+    
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+    
+    public String getCountryName() { return countryName; }
+    public void setCountryName(String countryName) { this.countryName = countryName; }
+    
+    public String getRegionName() { return regionName; }
+    public void setRegionName(String regionName) { this.regionName = regionName; }
+    
+    @Override
+    public String toString() {
+        return "Employee [ID=" + employeeId + 
+               ", Name=" + firstName + " " + lastName + 
+               ", Department=" + departmentName + 
+               ", Job=" + jobTitle + 
+               ", Location=" + city + ", " + countryName + 
+               ", Region=" + regionName + "]";
+    }
+}
+3. HR 테이블 다중 조인 DAO 클래스
+java
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class HREmployeeDAO {
+    // 싱글톤 인스턴스
+    private static HREmployeeDAO instance;
+    
+    // 생성자를 private으로 선언
+    private HREmployeeDAO() {}
+    
+    // 싱글톤 인스턴스 반환 메소드
+    public static synchronized HREmployeeDAO getInstance() {
+        if (instance == null) {
+            instance = new HREmployeeDAO();
+        }
+        return instance;
+    }
+    
+    // 모든 직원 정보 조회 메소드
+    public List<EmployeeDTO> getAllEmployees() {
+        List<EmployeeDTO> employeeList = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            // 싱글톤 인스턴스를 통해 연결 가져오기
+            conn = DBConnectionSingleton.getInstance().getConnection();
+            
+            // 다중 테이블 조인 쿼리
+            String sql = "SELECT e.employee_id, e.first_name, e.last_name, e.email, e.phone_number, " +
+                         "d.department_name, j.job_title, l.city, c.country_name, r.region_name " +
+                         "FROM employees e " +
+                         "JOIN departments d ON e.department_id = d.department_id " +
+                         "JOIN jobs j ON e.job_id = j.job_id " +
+                         "JOIN locations l ON d.location_id = l.location_id " +
+                         "JOIN countries c ON l.country_id = c.country_id " +
+                         "JOIN regions r ON c.region_id = r.region_id " +
+                         "ORDER BY e.employee_id";
+            
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            
+            while (rs.next()) {
+                EmployeeDTO employee = new EmployeeDTO();
+                employee.setEmployeeId(rs.getInt("employee_id"));
+                employee.setFirstName(rs.getString("first_name"));
+                employee.setLastName(rs.getString("last_name"));
+                employee.setEmail(rs.getString("email"));
+                employee.setPhoneNumber(rs.getString("phone_number"));
+                employee.setDepartmentName(rs.getString("department_name"));
+                employee.setJobTitle(rs.getString("job_title"));
+                employee.setCity(rs.getString("city"));
+                employee.setCountryName(rs.getString("country_name"));
+                employee.setRegionName(rs.getString("region_name"));
+                
+                employeeList.add(employee);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, pstmt, conn);
+        }
+        
+        return employeeList;
+    }
+    
+    // 특정 부서의 직원 정보 조회 메소드
+    public List<EmployeeDTO> getEmployeesByDepartment(String departmentName) {
+        List<EmployeeDTO> employeeList = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DBConnectionSingleton.getInstance().getConnection();
+            
+            String sql = "SELECT e.employee_id, e.first_name, e.last_name, e.email, e.phone_number, " +
+                         "d.department_name, j.job_title, l.city, c.country_name, r.region_name " +
+                         "FROM employees e " +
+                         "JOIN departments d ON e.department_id = d.department_id " +
+                         "JOIN jobs j ON e.job_id = j.job_id " +
+                         "JOIN locations l ON d.location_id = l.location_id " +
+                         "JOIN countries c ON l.country_id = c.country_id " +
+                         "JOIN regions r ON c.region_id = r.region_id " +
+                         "WHERE d.department_name = ? " +
+                         "ORDER BY e.employee_id";
+            
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, departmentName);
+            rs = pstmt.executeQuery();
+            
+            while (rs.next()) {
+                EmployeeDTO employee = new EmployeeDTO();
+                employee.setEmployeeId(rs.getInt("employee_id"));
+                employee.setFirstName(rs.getString("first_name"));
+                employee.setLastName(rs.getString("last_name"));
+                employee.setEmail(rs.getString("email"));
+                employee.setPhoneNumber(rs.getString("phone_number"));
+                employee.setDepartmentName(rs.getString("department_name"));
+                employee.setJobTitle(rs.getString("job_title"));
+                employee.setCity(rs.getString("city"));
+                employee.setCountryName(rs.getString("country_name"));
+                employee.setRegionName(rs.getString("region_name"));
+                
+                employeeList.add(employee);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(rs, pstmt, conn);
+        }
+        
+        return employeeList;
+    }
+    
+    // 리소스 해제 메소드
+    private void closeResources(ResultSet rs, PreparedStatement pstmt, Connection conn) {
+        try {
+            if (rs != null) rs.close();
+            if (pstmt != null) pstmt.close();
+            if (conn != null) conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+4. 메인 클래스
+java
+import java.util.List;
+
+public class HREmployeeMain {
+    public static void main(String[] args) {
+        // HREmployeeDAO 싱글톤 인스턴스 가져오기
+        HREmployeeDAO employeeDAO = HREmployeeDAO.getInstance();
+        
+        // 모든 직원 정보 조회
+        System.out.println("===== 모든 직원 정보 =====");
+        List<EmployeeDTO> allEmployees = employeeDAO.getAllEmployees();
+        for (EmployeeDTO employee : allEmployees) {
+            System.out.println(employee);
+        }
+        
+        // 특정 부서의 직원 정보 조회
+        System.out.println("\n===== IT 부서 직원 정보 =====");
+        List<EmployeeDTO> itEmployees = employeeDAO.getEmployeesByDepartment("IT");
+        for (EmployeeDTO employee : itEmployees) {
+            System.out.println(employee);
+        }
+        
+        // 특정 부서의 직원 정보 조회
+        System.out.println("\n===== Finance 부서 직원 정보 =====");
+        List<EmployeeDTO> financeEmployees = employeeDAO.getEmployeesByDepartment("Finance");
+        for (EmployeeDTO employee : financeEmployees) {
+            System.out.println(employee);
+        }
+    }
+}
+이 예제는 다음과 같은 특징을 가지고 있습니다:
+
+싱글톤 패턴 적용:
+
+DBConnectionSingleton 클래스: 데이터베이스 연결을 관리하는 싱글톤 클래스
+
+HREmployeeDAO 클래스: 데이터 접근 로직을 담당하는 싱글톤 클래스
+
+다중 테이블 조인:
+
+employees, departments, jobs, locations, countries, regions 테이블을 조인하여 직원 정보를 가져옴
+
+DTO(Data Transfer Object) 패턴:
+
+EmployeeDTO 클래스를 사용하여 조회 결과를 객체로 변환
+
+DAO(Data Access Object) 패턴:
+
+HREmployeeDAO 클래스를 통해 데이터베이스 접근 로직을 캡슐화
+
+이 예제를 실행하면 HR 계정의 여러 테이블을 조인하여 직원 정보를 조회하고, 싱글톤 패턴을 통해 데이터베이스 연결을 효율적으로 관리할 수 있습니다.
+
